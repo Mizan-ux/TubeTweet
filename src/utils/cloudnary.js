@@ -4,6 +4,7 @@ dotenv.config({
 });
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
+import { ApiError } from "./ApiError";
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -48,5 +49,16 @@ const uploadOnCloudinary = async (localFilePath) => {
 };
 
 
+const deleteFromCloudinary = async (localFilePath) => {
+    try {
+        if (!localFilePath) return null;
 
-export { uploadOnCloudinary };
+        const publicId = localFilePath.split('/').pop().split('.')[0];
+        await cloudinary.uploader.destroy(publicId);
+    } catch (error) {
+        throw new ApiError(400, error?.message || "not able to delete oldImage");
+    }
+}
+
+
+export { uploadOnCloudinary, deleteFromCloudinary };

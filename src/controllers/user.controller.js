@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js"
-import { uploadOnCloudinary } from "../utils/cloudnary.js"
+import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudnary.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken"
 
@@ -262,8 +262,17 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
                 avatar: avatar.url
             }
         },
-        { new: true }
+        {
+            new: true,
+            projection: {
+                avatar: 1,
+                _id: 0,
+                oldAvatar: '$avatar'
+            }
+        }
     ).select("-password -refreshToken");
+
+    deleteFromCloudinary(user.oldAvatar);
 
     return res
         .status(200)
