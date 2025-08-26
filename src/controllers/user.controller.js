@@ -45,6 +45,8 @@ const registerUser = asyncHandler(async (req, res) => {
 
 
 
+
+
         if (!avatarLocalPath) {
             throw new ApiError(400, "avatarImage is required");
         }
@@ -54,7 +56,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
 
         if (!avatar) {
-            throw new ApiError(400, "avatarImage is required");
+            throw new ApiError(400, "avatarImage is required to upload");
         }
 
         const user = await User.create({
@@ -134,7 +136,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set: { refreshToken: undefined }
+            $unset: { refreshToken: 1 }
         },
         {
             new: true
@@ -154,13 +156,14 @@ const logoutUser = asyncHandler(async (req, res) => {
 })
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
+    //req.body is for mobile devies
     const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
-    if (refreshAccessToken) {
+    if (!incomingRefreshToken) {
         throw new ApiError(401, "unauthorized request");
     }
 
     try {
-        const decodedToken = jwt.verify(refreshAccessToken, process.env.REFRESH_TOKEN_SECRET);
+        const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
 
         const user = await User.findById(decodedToken?._id);
 
@@ -168,7 +171,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             throw new ApiError(401, "Invalid Refresh Token");
         }
 
-        if (!incomingRefreshToken !== user?.refreshToken) {
+        if (incomingRefreshToken !== user?.refreshToken) {
             throw new ApiError(401, "Refresh Token is expired or used");
         }
 
@@ -181,8 +184,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
         return res
             .status(200)
-            .cookie("accessToken", accessToken)
-            .cookie("refreshToken", newRefreshToken)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", newRefreshToken, options)
             .json(
                 new ApiResponse(
                     200,
@@ -216,7 +219,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 
 const getCurrentUser = asyncHandler(async (req, res) => {
     return res.status(200)
-        .json(200, req.user, "Current user fetched Successfully");
+        .json(new ApiResponse(200, req.user, "Current user fetched Successfully"));
 })
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
@@ -256,6 +259,8 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Error while uploading on avatar");
     }
 
+    User.updateOne
+    const oldAvatar = req.user.avatar;
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
@@ -263,17 +268,12 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
                 avatar: avatar.url
             }
         },
-        {
-            new: true,
-            projection: {
-                avatar: 1,
-                _id: 0,
-                oldAvatar: '$avatar'
-            }
-        }
+        { new: true }
+
     ).select("-password -refreshToken");
 
-    deleteFromCloudinary(user.oldAvatar);
+    deleteFromCloudinary(oldAvatar);
+
 
     return res
         .status(200)
@@ -299,6 +299,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Error while uploading on CoverImage");
     }
 
+    const oldImage = req.user.coverImage;
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
@@ -309,13 +310,14 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
         { new: true }
     ).select("-password -refreshToken");
 
+    deleteFromCloudinary(oldImage);
     return res
         .status(200)
         .json(
             new ApiResponse(
                 200,
                 user,
-                "Avatar updated successfully"
+                "Cover Image updated successfully"
             )
         );
 })
@@ -454,4 +456,4 @@ export {
     updateUserCoverImage,
     getUserChannelProfile,
     getWatchHistory
-};
+};  

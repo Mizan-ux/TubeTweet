@@ -38,7 +38,7 @@ router.post("/logout", verifyJWT, logoutUser);
 router.post("/refresh-token", refreshAccessToken);
 router.post("/change-password", verifyJWT, changeCurrentPassword);
 router.get("/current-user", verifyJWT, getCurrentUser);
-router.patch("/update-account", updateAccountDetails);
+router.patch("/update-account", verifyJWT, updateAccountDetails);
 router.patch("/avatar", verifyJWT, upload.single("avatar"), updateUserAvatar);
 router.patch("/cover-image", verifyJWT, upload.single("coverImage"), updateUserCoverImage);
 router.get("/c/:username", verifyJWT, getUserChannelProfile);
