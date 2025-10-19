@@ -23,29 +23,61 @@ const uploadOnCloudinary = async (localFilePath) => {
     try {
         if (!localFilePath) return null;
 
+        // Detect if it's a video file
+        const isVideo = localFilePath.match(/\.(mp4|mov|webm)$/i);
 
-        const response = await cloudinary.uploader.upload(localFilePath, {
+        const uploadOptions = {
             resource_type: "auto",
             quality: "auto",
             fetch_format: "auto",
-        });
+            // Video specific options for compression
+            ...(isVideo && {
+                chunk_size: 6000000,
+                eager: [
+                    {
+                        width: 720,
+                        height: 404,
+                        crop: "pad",
+                        audio_codec: "aac",
+                        video_codec: "h264",
+                        bit_rate: "600k",  // Reduce bitrate for smaller file size
+                        quality: "auto:low" // Use lower quality
+                    }
+                ],
+                eager_async: true,
+                transformation: [
+                    {
+                        width: 720,
+                        quality: "auto:low",
+                        format: "mp4"
+                    }
+                ]
+            })
+        };
 
+        console.log("Starting upload with options:", uploadOptions);
 
-        // Delete local file only if it exists and hasn't been deleted
+        const response = await cloudinary.uploader.upload(
+            localFilePath,
+            uploadOptions
+        );
+
         if (fs.existsSync(localFilePath)) {
             fs.unlinkSync(localFilePath);
             console.log("Local file deleted:", localFilePath);
         }
 
-        // global.isUploading = false;
         return response;
 
     } catch (error) {
-        console.error("Upload failed with error:", error.message);
+        console.error("Upload failed:", {
+            message: error.message,
+            code: error.http_code,
+            details: error
+        });
         if (fs.existsSync(localFilePath)) {
             fs.unlinkSync(localFilePath);
         }
-        // global.isUploading = false;
         return null;
     }
 };

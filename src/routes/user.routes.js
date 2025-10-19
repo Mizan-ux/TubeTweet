@@ -34,6 +34,7 @@ router.post("/login", loginUser);
 
 
 //secure routes
+router.post("/login", loginUser);
 router.post("/logout", verifyJWT, logoutUser);
 router.post("/refresh-token", refreshAccessToken);
 router.post("/change-password", verifyJWT, changeCurrentPassword);

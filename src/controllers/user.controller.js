@@ -24,7 +24,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const { username, email, password, fullname } = req.body;
 
     if ([fullname, email, username, password].some((field) => field?.trim() === "")) {
-        throw new ApiError(400, "fullname is required ")
+        throw new ApiError(400, "all feilds is required ");
     }
 
     try {
@@ -42,9 +42,6 @@ const registerUser = asyncHandler(async (req, res) => {
 
         const avatarLocalPath = req.files?.avatar[0]?.path;
         const coverImageLocalPath = req.files?.coverImage[0]?.path;
-
-
-
 
 
         if (!avatarLocalPath) {
@@ -132,7 +129,7 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 })
 
-const logoutUser = asyncHandler(async (req, res) => {
+const logoutUser = asyncHandler(async (req, res) => {   
     await User.findByIdAndUpdate(
         req.user._id,
         {
@@ -259,7 +256,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Error while uploading on avatar");
     }
 
-    User.updateOne
+    
     const oldAvatar = req.user.avatar;
     const user = await User.findByIdAndUpdate(
         req.user?._id,
