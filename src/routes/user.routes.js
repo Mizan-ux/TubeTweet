@@ -28,7 +28,6 @@ router.post("/register", upload.fields([
         maxCount: 1,
     }
 ]), registerUser);
-// router.post("/login", loginUser);
 
 router.post("/login", loginUser);
 

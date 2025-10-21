@@ -36,7 +36,7 @@ const registerUser = asyncHandler(async (req, res) => {
             throw new ApiError(409, "User with email or username already exists");
         }
 
-        if (!req.files || !req.files.avatar) {
+        if (!req.files.coverImage || !req.files.avatar) {
             throw new ApiError(400, "Avatar file is required");
         }
 
@@ -129,7 +129,7 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 })
 
-const logoutUser = asyncHandler(async (req, res) => {   
+const logoutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(
         req.user._id,
         {
@@ -256,7 +256,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Error while uploading on avatar");
     }
 
-    
+
     const oldAvatar = req.user.avatar;
     const user = await User.findByIdAndUpdate(
         req.user?._id,
