@@ -7,7 +7,10 @@ import { asyncHandler } from "../utils/asyncHandler.js"
 
 const createTweet = asyncHandler(async (req, res) => {
     //TODO: create tweet
-    
+    const {title,content} = req.body;
+    if (title) {
+        
+    }
 })
 
 const getUserTweets = asyncHandler(async (req, res) => {

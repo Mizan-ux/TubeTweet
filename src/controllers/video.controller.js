@@ -183,17 +183,16 @@ const updateVideo = asyncHandler(async (req, res) => {
     if (!isValidObjectId(videoId)) {
         throw new ApiError(400, "Invalid video ID");
     }
-    // First get the old video details for thumbnail cleanup
-    const video = await Video.findById(videoId);
+
+    // Combined video find and ownership check
+    const video = await Video.findOne({
+        _id: videoId,
+        owner: req.user._id
+    });
+
     if (!video) {
-        throw new ApiError(404, "Video not found");
+        throw new ApiError(404, "Video not found or unauthorized");
     }
-    //match the owner to verify
-    if (!video.owner.equals(req.user._id)) {
-        throw new ApiError(403, "Unauthorized - You don't own this video");
-    }
-
-
 
     if ([title, description].some((field) => !field?.trim())) {
         throw new ApiError(400, "All fields are required");
@@ -250,14 +249,14 @@ const deleteVideo = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid video ID");
     }
 
-    // Find video and verify ownership in one query
+    // Combined video find and ownership check
     const video = await Video.findOne({
         _id: videoId,
         owner: req.user._id
     });
 
     if (!video) {
-        throw new ApiError(404, "Video not found or you don't have permission");
+        throw new ApiError(404, "Video not found or unauthorized");
     }
 
     try {
@@ -294,18 +293,12 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid video ID");
     }
 
-    const video = await Video.findById(videoId);
-    if (!video) {
-        throw new ApiError(404, "Video not found");
-    }
-    //match the owner to verify
-    if (!video.owner.equals(req.user._id)) {
-        throw new ApiError(403, "Unauthorized - You don't own this video");
-    }
-
-
-    const updatedVideo = await Video.findByIdAndUpdate(
-        videoId,
+    // Combined find and update with ownership check
+    const updatedVideo = await Video.findOneAndUpdate(
+        {
+            _id: videoId,
+            owner: req.user._id
+        },
         [
             {
                 $set: {
@@ -317,7 +310,7 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
     );
 
     if (!updatedVideo) {
-        throw new ApiError(404, "Video not found");
+        throw new ApiError(404, "Video not found or unauthorized");
     }
 
     return res.status(200).json(
