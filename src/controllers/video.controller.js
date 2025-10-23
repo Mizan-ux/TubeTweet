@@ -91,7 +91,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
 const publishAVideo = asyncHandler(async (req, res) => {
     const { title, description, isPublished } = req.body
 
-    if ([title, description].some((field) => field?.trim())) {
+    if ([title, description].some((field) => !field?.trim())) {
         throw new ApiError(400, "All fields are required");
     }
 
@@ -214,7 +214,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     }
 
     // Update using updateOne - faster than findByIdAndUpdate
-    await Video.updateOne(
+    const updatedVideo = await Video.findOneAndUpdate(
         {
             _id: videoId,
             owner: req.user._id
@@ -225,8 +225,13 @@ const updateVideo = asyncHandler(async (req, res) => {
                 description,
                 thumbnail: thumbnail.url
             }
-        }
+        },
+        { new: true }
     );
+
+    if (!updatedVideo) {
+        throw new ApiError(404, "Video not found or unauthorized");
+    }
 
     // Delete old thumbnail after successful update
     if (oldThumbnailUrl) {
@@ -236,7 +241,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     return res.status(200).json(
         new ApiResponse(
             200,
-            { title, description, thumbnail: thumbnail.url },
+            updatedVideo,
             "Video updated successfully"
         )
     );
