@@ -22,4 +22,4 @@ const playlistSchema = Schema({
     }
 }, { timeStamp: true });
 
-export const PlayList = model("PlayList", playlistSchema);
+export const Playlist = model("PlayList", playlistSchema);

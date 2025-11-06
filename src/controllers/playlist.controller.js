@@ -4,160 +4,150 @@ import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 
-
 const createPlaylist = asyncHandler(async (req, res) => {
-    const { name, description, videoId } = req.body
-    //TODO: create playlist
-
+    const { name, description } = req.body
     if ([name, description].some((item) => !item?.trim())) {
         throw new ApiError(401, "All fields are required");
     }
 
-    const playlistExixtance = await Playlist.findOne({ name, description, owner: req.user._id });
-    if (playlistExixtance) {
-        throw new ApiError(400, "the same name playlist is available use Different name");
+    const playlistExistence = await Playlist.findOne({ name, description, owner: req.user._id });
+    if (playlistExistence) {
+        throw new ApiError(400, "A playlist with the same name already exists. Use a different name.");
     }
 
-
-    const playList = await Playlist.create({
+    const playlist = await Playlist.create({
         name,
         description,
         owner: req.user._id,
-        videoId: videoId || null,
     });
 
-    if (!playList) {
-        throw new ApiError(400, "Playlist is not Created");
+    if (!playlist) {
+        throw new ApiError(400, "Playlist is not created");
     }
 
     return res.status(201).json(
-        new ApiResponse(201, playList, "Plalist is created Successfully")
+        new ApiResponse(201, playlist, "Playlist is created successfully")
     )
-})
+})// tested
 
 const getUserPlaylists = asyncHandler(async (req, res) => {
     const { userId } = req.params
-    //TODO: get user playlists
     if (!isValidObjectId(userId)) {
-        throw new ApiError(400, "Invalid Credencials");
+        throw new ApiError(400, "Invalid Credentials");
     }
 
-    const userPlaylist = await Playlist.findOne({ owner: userId });
+    const userPlaylists = await Playlist.find({ owner: userId });
 
-    if (!userPlaylist) {
-        throw new ApiError(400, "PlayList not Found");
+    if (!userPlaylists || userPlaylists.length === 0) {
+        throw new ApiError(404, "Playlist not found");
     }
 
     return res.status(200).json(
-        new ApiResponse(200, userPlaylist, "PlayList Found Successfully")
+        new ApiResponse(200, userPlaylists, "Playlist found successfully")
     )
-
-})
+}) //tested
 
 const getPlaylistById = asyncHandler(async (req, res) => {
     const { playlistId } = req.params
-    //TODO: get playlist by id
 
     if (!isValidObjectId(playlistId)) {
-        throw new ApiError(400, "Invalid Credencials");
+        throw new ApiError(400, "Invalid Credentials");
     }
 
     const playlist = await Playlist.findOne({ _id: playlistId });
 
     if (!playlist) {
-        throw new ApiError(400, "PlayList not Found");
+        throw new ApiError(404, "Playlist not found");
     }
 
     return res.status(200).json(
-        new ApiResponse(200, playlist, "PlayList Found Successfully")
+        new ApiResponse(200, playlist, "Playlist found successfully")
     )
-})
+}) //tested
 
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
     const { playlistId, videoId } = req.params
-    if (!isValidObjectId(playlistId && videoId)) {
-        throw new ApiError(400, "Invalid Credencials");
+    if (!isValidObjectId(playlistId) || !isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid Credentials");
     }
 
-    const addedVdoPlalist = await Playlist.findByIdAndUpdate(
-        { _id: playlistId },
+    const updatedPlaylist = await Playlist.findByIdAndUpdate(
+        playlistId,
         {
-            $set: {
-                videoId: videoId
+            $push: {
+                videos: videoId
             }
         },
         { new: true }
     )
 
-    if (!addedVdoPlalist) {
-        throw new ApiError(400, "PlayList not Found or not updated");
+    if (!updatedPlaylist) {
+        throw new ApiError(404, "Playlist not found or not updated");
     }
 
     return res.status(200).json(
-        new ApiResponse(200, addVideoToPlaylist, "Video Added to PlayList Successfully")
+        new ApiResponse(200, updatedPlaylist, "Video added to playlist successfully")
     )
-
-})
+}) //tested
 
 const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
     const { playlistId, videoId } = req.params
-    // TODO: remove video from playlist
-    if (!isValidObjectId(playlistId && videoId)) {
-        throw new ApiError(400, "Invalid Credencials");
+    if (!isValidObjectId(playlistId) || !isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid Credentials");
     }
 
-    const removedVdoFPlaylist = await Playlist.findOneAndDelete(
+    const updatedPlaylist = await Playlist.findByIdAndUpdate(
+        playlistId,
         {
-            _id: playlistId,
-            videoId: videoId
-        }
+            $pull: {
+                videos: videoId
+            }
+        },
+        { new: true }
     );
 
-    if (!removedVdoFPlaylist) {
-        throw new ApiError(400, "Not Able to remove video");
+    if (!updatedPlaylist) {
+        throw new ApiError(400, "Unable to remove video"); // error
     }
 
     return res.status(200).json(
-        new ApiResponse(200, removedVdoFPlaylist, "Video removed Successfully")
+        new ApiResponse(200, updatedPlaylist, "Video removed successfully")
     )
-})
+}) //tested
 
 const deletePlaylist = asyncHandler(async (req, res) => {
     const { playlistId } = req.params
-    // TODO: delete playlist
     if (!isValidObjectId(playlistId)) {
-        throw new ApiError(400, "Invalid Credencials");
+        throw new ApiError(400, "Invalid Credentials");
     }
 
-    const delPlaylist = await Playlist.findOneAndDelete(
+    const deletedPlaylist = await Playlist.findOneAndDelete(
         {
             _id: playlistId,
         }
     );
 
-    if (!delPlaylist) {
-        throw new ApiError(400, "Not Able to delete playlist");
+    if (!deletedPlaylist) {
+        throw new ApiError(400, "Unable to delete playlist");
     }
 
     return res.status(200).json(
-        new ApiResponse(200, delPlaylist, "playlist deleted Successfully")
+        new ApiResponse(200, deletedPlaylist, "Playlist deleted successfully")
     )
-
-})
+}) // tested
 
 const updatePlaylist = asyncHandler(async (req, res) => {
     const { playlistId } = req.params
     const { name, description } = req.body
-    //TODO: update playlist
     if (!isValidObjectId(playlistId)) {
-        throw new ApiError(400, "Invalid Credencials");
+        throw new ApiError(400, "Invalid Credentials");
     }
     if ([name, description].some((item) => !item?.trim())) {
         throw new ApiError(401, "All fields are required");
     }
 
-    const updPlaylist = await Playlist.findByIdAndUpdate(
-        { _id: playlistId },
+    const updatedPlaylist = await Playlist.findByIdAndUpdate(
+        playlistId,
         {
             $set: {
                 name: name,
@@ -167,15 +157,14 @@ const updatePlaylist = asyncHandler(async (req, res) => {
         { new: true }
     )
 
-    if (!updPlaylist) {
-        throw new ApiError(400, "Not Able to update playlist");
+    if (!updatedPlaylist) {
+        throw new ApiError(400, "Unable to update playlist");
     }
 
     return res.status(200).json(
-        new ApiResponse(200, updPlaylist, "playlist updated Successfully")
+        new ApiResponse(200, updatedPlaylist, "Playlist updated successfully")
     )
-
-})
+})//tested
 
 export {
     createPlaylist,
