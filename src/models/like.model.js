@@ -1,4 +1,3 @@
-import { timeStamp } from "console";
 import { Schema, model } from "mongoose";
 
 const likeSchema = Schema({
