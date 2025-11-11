@@ -3,6 +3,8 @@ import { Video } from "../models/video.model.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
+import { isValidObjectId } from "mongoose";
+
 
 const getVideoComments = asyncHandler(async (req, res) => {
     //TODO: get all comments for a video
@@ -25,17 +27,18 @@ const getVideoComments = asyncHandler(async (req, res) => {
     return res.status(200).json(
         new ApiResponse(200, allComments, "Comments Fetched Successfully")
     )
-})
+})//tested
 
 const addComment = asyncHandler(async (req, res) => {
     // TODO: add a comment to a video
     const { videoId } = req.params;
     const { content } = req.body;
+
     if (!isValidObjectId(videoId)) {
         throw new ApiError(400, "Invalid Credencials");
     }
 
-    const result = await Video.exists({ video: videoId });
+    const result = await Video.exists({ _id: videoId });
 
     if (!result) {
         throw new ApiError(400, "Invalid VideoId");
@@ -54,7 +57,7 @@ const addComment = asyncHandler(async (req, res) => {
     return res.status(201).json(
         new ApiResponse(201, commentAdded, "Comment added Successfully")
     );
-})
+}) //tested
 
 const updateComment = asyncHandler(async (req, res) => {
     // TODO: update a comment
@@ -87,7 +90,7 @@ const updateComment = asyncHandler(async (req, res) => {
     return res.status(200).json(
         new ApiResponse(200, result, "Comment updated Successfully")
     )
-})
+}) //tested
 
 const deleteComment = asyncHandler(async (req, res) => {
     // TODO: delete a comment
@@ -111,7 +114,7 @@ const deleteComment = asyncHandler(async (req, res) => {
     return res.status(200).json(
         new ApiResponse(200, deletedOne, "Comment deleted Successfully")
     )
-})
+})//tested
 
 export {
     getVideoComments,

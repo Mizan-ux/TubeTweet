@@ -110,7 +110,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
         const videoFile = await uploadOnCloudinary(videoLocalPath);
         if (!videoFile?.url) {
-            throw new ApiError(400, `Video upload failed: ${videoFile?.error || 'Unknown error'}`);
+            throw   new ApiError(400, `Video upload failed: ${videoFile?.error || 'Unknown error'}`);
         }
 
         const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
