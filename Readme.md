@@ -1,4 +1,4 @@
-"# TubeTweet"
+TubeTweet
 
 A hybrid social media platform combining the short-form video & streaming features of YouTube with the real-time microblogging of Twitter. 
 Users can post short videos, live streams, and text updates while engaging with a dynamic feed of content.
